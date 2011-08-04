@@ -9,6 +9,7 @@
 </body>
 <script src="jquery-1.6.2.js"></script>
 <script src="mustache.js"></script>
+<script src="underscore.js"></script>
 <script>
 var EgoMonitor = (function () {
   'use strict';
@@ -51,17 +52,22 @@ var EgoMonitor = (function () {
     });
   };
 
-  ns.loadWithCaching = function (that, callback) {
-    var cached = ns.cache.get(that.key()),
-        wrappedCallback = function (rawData) {
-          ns.cache.set(that.key(), rawData);
-          callback(that.transform(rawData));
-        };
+  ns.EgoSource = function () {};
+  ns.EgoSource.prototype = {
+    constructor: ns.EgoSource,
+    load: function (callback) {
+      var that = this,
+          cached = ns.cache.get(that.key()),
+          wrappedCallback = function (rawData) {
+            ns.cache.set(that.key(), rawData);
+            callback(that.transform(rawData));
+          };
 
-    if (cached) {
-      wrappedCallback(JSON.parse(cached));
-    } else {
-      jQuery.getJSON(that.jsonpURL, wrappedCallback);
+      if (cached) {
+        wrappedCallback(JSON.parse(cached));
+      } else {
+        jQuery.getJSON(that.jsonpURL, wrappedCallback);
+      }
     }
   };
 
@@ -75,7 +81,7 @@ var EgoMonitor = (function () {
     this.userID = options.userID;
   };
 
-  ns.StackExchange.prototype = {
+  ns.StackExchange.prototype = _.extend(new ns.EgoSource(), {
     constructor: ns.StackExchange,
     /** @const */
     API_URL: 'http://api.%domain/1.1/users/%userID',
@@ -96,22 +102,16 @@ var EgoMonitor = (function () {
         score: rawData.users[0].reputation,
       };
     },
-    /**
-     * @param callback {Function} takes a {Object} data parameter
-     */
-    load: function (callback) {
-      ns.loadWithCaching(this, callback);
-    },
     key: function () {
       return JSON.stringify(this);
     },
-  };
+  });
 
   ns.Twitter = function (options) {
     this.screenName = options.screenName;
   };
 
-  ns.Twitter.prototype = {
+  ns.Twitter.prototype = _.extend(new ns.EgoSource(), {
     constructor: ns.Twitter,
     API_URL: 'http://api.twitter.com/1/followers/ids.json',
     ICON_URL: 'http://twitter.com/favicon.ico',
@@ -125,37 +125,29 @@ var EgoMonitor = (function () {
         score: rawData.length,
       };
     },
-    load: function (callback) {
-      ns.loadWithCaching(this, callback);
-      // var that = this;
-      // jQuery.getJSON([that.API_URL, '?callback=?&', jQuery.param({screen_name: that.screenName})].join(''), function (rawData) {
-      //   ns.cache.set(that.key(), rawData);
-      //   callback(that.transform(rawData));
-      // });
-    },
     key: function () {
       return JSON.stringify(this);
     },
-  };
+  });
 
   ns.RubyGems = function (options) {
     this.gemName = options.gemName;
   };
 
-  ns.RubyGems.prototype = {
+  ns.RubyGems.prototype = _.extend(new ns.EgoSource(), {
     constructor: ns.RubyGems,
     API_URL: 'http://rubygems.org/api/v1/versions/%gemName.json',
-  };
+  });
 
   ns.GitHub = function (options) {
     this.userName = options.userName;
     this.repoName = options.repoName;
   };
 
-  ns.GitHub.prototype = {
+  ns.GitHub.prototype = _.extend(new ns.EgoSource(), {
     constructor: ns.GitHub,
     API_URL: 'http://github.com/api/v2/json/repos/show/%userName/%repoName',
-  };
+  });
 
   return ns;
 }());
