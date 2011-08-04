@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>EgoMonitor</title>
+</head>
+<body>
+<h2>Total: <span id="total"></span></h2>
+<ul id="monitors"></ul>
+</body>
+<script src="jquery-1.6.2.js"></script>
+<script src="mustache.js"></script>
+<script>
+var EgoMonitor = (function () {
+  'use strict';
+
+  /** @module */
+  var module = {};
+
+  module.Storage = function () { 
+    this.storage = localStorage;
+  };
+
+  module.Storage.prototype = {
+    constructor: module.Storage,
+    get: function (key) {
+      return this.storage.getItem(key);
+    },
+    set: function (key, value) {
+      return this.storage.setItem(key, JSON.stringify(value));
+    },
+    clear: function () {
+      return this.storage.clear();
+    }
+  };
+
+  module.cache = new module.Storage();
+
+  module.templates = {
+    score: '<li style="list-style-image: url({{iconURL}})">{{label}} {{score}}</li>'
+  };
+
+  module.refresh = function (instances) {
+    var total = 0;
+
+    instances.forEach(function (i) {
+      i.load(function (data) {
+        total += data.score;
+        $('#monitors').append(Mustache.to_html(EgoMonitor.templates.score, data));
+        $('#total').html(total);
+      });
+    });
+  };
+
+  module.loadWithCaching = function (that, callback) {
+    var cached = module.cache.get(that.key()),
+        wrappedCallback = function (rawData) {
+          module.cache.set(that.key(), rawData);
+          callback(that.transform(rawData));
+        };
+
+    if (cached) {
+      wrappedCallback(JSON.parse(cached));
+    } else {
+      jQuery.getJSON(that.jsonpURL, wrappedCallback);
+    }
+  };
+
+  /** 
+   * @param options {Object} contains {Number} userID of user to monitor and {String} domain of the StackExchange site
+   * @example new StackExchange({domain: 'stackoverflow.com', userID: 146764});
+   * @constructor
+   */
+  module.StackExchange = function (options) {
+    this.domain = options.domain;
+    this.userID = options.userID;
+  };
+
+  module.StackExchange.prototype = {
+    constructor: module.StackExchange,
+    /** @const */
+    API_URL: 'http://api.%domain/1.1/users/%userID',
+    ICON_URL: 'http://%domain/favicon.ico',
+    iconURL: function () {
+      return this.ICON_URL.replace('%domain', this.domain);
+    },
+    userURL: function () {
+      return this.API_URL.replace('%domain', this.domain).replace('%userID', this.userID);
+    },
+    jsonpURL: function () {
+      return [this.userURL(), 'jsonp=?'].join('?');
+    },
+    transform: function (rawData) {
+      return {
+        iconURL: this.iconURL(),
+        label: this.domain,
+        score: rawData.users[0].reputation,
+      };
+    },
+    /**
+     * @param callback {Function} takes a {Object} data parameter
+     */
+    load: function (callback) {
+      module.loadWithCaching(this, callback);
+    },
+    key: function () {
+      return JSON.stringify(this);
+    },
+  };
+
+  module.Twitter = function (options) {
+    this.screenName = options.screenName;
+  };
+
+  module.Twitter.prototype = {
+    constructor: module.Twitter,
+    API_URL: 'http://api.twitter.com/1/followers/ids.json',
+    ICON_URL: 'http://twitter.com/favicon.ico',
+    jsonpURL: function () {
+      return [this.API_URL, '?callback=?&', jQuery.param({screen_name: this.screenName})].join('');
+    },
+    transform: function (rawData) {
+      return {
+        iconURL: this.ICON_URL,
+        label: this.screenName,
+        score: rawData.length,
+      };
+    },
+    load: function (callback) {
+      module.loadWithCaching(this, callback);
+      // var that = this;
+      // jQuery.getJSON([that.API_URL, '?callback=?&', jQuery.param({screen_name: that.screenName})].join(''), function (rawData) {
+      //   module.cache.set(that.key(), rawData);
+      //   callback(that.transform(rawData));
+      // });
+    },
+    key: function () {
+      return JSON.stringify(this);
+    },
+  };
+
+  module.RubyGems = function (options) {
+    this.gemName = options.gemName;
+  };
+
+  module.RubyGems.prototype = {
+    constructor: module.RubyGems,
+    API_URL: 'http://rubygems.org/api/v1/versions/%gemName.json',
+  };
+
+  module.GitHub = function (options) {
+    this.userName = options.userName;
+    this.repoName = options.repoName;
+  };
+
+  module.GitHub.prototype = {
+    constructor: module.GitHub,
+    API_URL: 'http://github.com/api/v2/json/repos/show/%userName/%repoName',
+  };
+
+  return module;
+}());
+
+// TODO get rid of global
+var config = [
+  {connector: 'StackExchange', options: {domain: 'stackoverflow.com', userID: 146764}},
+  {connector: 'StackExchange', options: {domain: 'superuser.com', userID: 13827}},
+  {connector: 'StackExchange', options: {domain: 'unix.stackexchange.com', userID: 569}},
+  {connector: 'StackExchange', options: {domain: 'askubuntu.com', userID: 1528}},
+  {connector: 'Twitter', options: {screenName: 'altimagination'}},
+  {connector: 'Twitter', options: {screenName: 'benjaminoakes'}},
+  {connector: 'Twitter', options: {screenName: 'newhavenrb'}},
+  // {connector: 'RubyGems', options {gemName: 'maid'}},
+  // {connector: 'RubyGems', options {gemName: 'snow'}},
+  // {connector: 'RubyGems', options {gemName: 'mailroom'}},
+  // {connector: 'GitHub', options: {userName: 'benjaminoakes', repoName: 'maid'},
+  // {connector: 'GitHub', options: {userName: 'benjaminoakes', repoName: 'tabcarousel'},
+  // TODO // {connector: 'GitHub.com/api/v2/json/user/show/benjaminoakes
+];
+
+$(document).ready(function () {
+  var instances = config.map(function (c) {
+    return new EgoMonitor[c.connector](c.options);
+  });
+
+  EgoMonitor.refresh(instances);
+});
+</script>
+</html>
