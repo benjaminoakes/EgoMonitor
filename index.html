@@ -14,14 +14,14 @@ var EgoMonitor = (function () {
   'use strict';
 
   /** @module */
-  var module = {};
+  var ns = {};
 
-  module.Storage = function () { 
+  ns.Storage = function () { 
     this.storage = localStorage;
   };
 
-  module.Storage.prototype = {
-    constructor: module.Storage,
+  ns.Storage.prototype = {
+    constructor: ns.Storage,
     get: function (key) {
       return this.storage.getItem(key);
     },
@@ -33,13 +33,13 @@ var EgoMonitor = (function () {
     }
   };
 
-  module.cache = new module.Storage();
+  ns.cache = new ns.Storage();
 
-  module.templates = {
+  ns.templates = {
     score: '<li style="list-style-image: url({{iconURL}})">{{label}} {{score}}</li>'
   };
 
-  module.refresh = function (instances) {
+  ns.refresh = function (instances) {
     var total = 0;
 
     instances.forEach(function (i) {
@@ -51,10 +51,10 @@ var EgoMonitor = (function () {
     });
   };
 
-  module.loadWithCaching = function (that, callback) {
-    var cached = module.cache.get(that.key()),
+  ns.loadWithCaching = function (that, callback) {
+    var cached = ns.cache.get(that.key()),
         wrappedCallback = function (rawData) {
-          module.cache.set(that.key(), rawData);
+          ns.cache.set(that.key(), rawData);
           callback(that.transform(rawData));
         };
 
@@ -70,13 +70,13 @@ var EgoMonitor = (function () {
    * @example new StackExchange({domain: 'stackoverflow.com', userID: 146764});
    * @constructor
    */
-  module.StackExchange = function (options) {
+  ns.StackExchange = function (options) {
     this.domain = options.domain;
     this.userID = options.userID;
   };
 
-  module.StackExchange.prototype = {
-    constructor: module.StackExchange,
+  ns.StackExchange.prototype = {
+    constructor: ns.StackExchange,
     /** @const */
     API_URL: 'http://api.%domain/1.1/users/%userID',
     ICON_URL: 'http://%domain/favicon.ico',
@@ -100,19 +100,19 @@ var EgoMonitor = (function () {
      * @param callback {Function} takes a {Object} data parameter
      */
     load: function (callback) {
-      module.loadWithCaching(this, callback);
+      ns.loadWithCaching(this, callback);
     },
     key: function () {
       return JSON.stringify(this);
     },
   };
 
-  module.Twitter = function (options) {
+  ns.Twitter = function (options) {
     this.screenName = options.screenName;
   };
 
-  module.Twitter.prototype = {
-    constructor: module.Twitter,
+  ns.Twitter.prototype = {
+    constructor: ns.Twitter,
     API_URL: 'http://api.twitter.com/1/followers/ids.json',
     ICON_URL: 'http://twitter.com/favicon.ico',
     jsonpURL: function () {
@@ -126,10 +126,10 @@ var EgoMonitor = (function () {
       };
     },
     load: function (callback) {
-      module.loadWithCaching(this, callback);
+      ns.loadWithCaching(this, callback);
       // var that = this;
       // jQuery.getJSON([that.API_URL, '?callback=?&', jQuery.param({screen_name: that.screenName})].join(''), function (rawData) {
-      //   module.cache.set(that.key(), rawData);
+      //   ns.cache.set(that.key(), rawData);
       //   callback(that.transform(rawData));
       // });
     },
@@ -138,26 +138,26 @@ var EgoMonitor = (function () {
     },
   };
 
-  module.RubyGems = function (options) {
+  ns.RubyGems = function (options) {
     this.gemName = options.gemName;
   };
 
-  module.RubyGems.prototype = {
-    constructor: module.RubyGems,
+  ns.RubyGems.prototype = {
+    constructor: ns.RubyGems,
     API_URL: 'http://rubygems.org/api/v1/versions/%gemName.json',
   };
 
-  module.GitHub = function (options) {
+  ns.GitHub = function (options) {
     this.userName = options.userName;
     this.repoName = options.repoName;
   };
 
-  module.GitHub.prototype = {
-    constructor: module.GitHub,
+  ns.GitHub.prototype = {
+    constructor: ns.GitHub,
     API_URL: 'http://github.com/api/v2/json/repos/show/%userName/%repoName',
   };
 
-  return module;
+  return ns;
 }());
 
 // TODO get rid of global
