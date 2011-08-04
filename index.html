@@ -17,6 +17,7 @@ var EgoMonitor = (function () {
   /** @module */
   var ns = {};
 
+  /** Thin wrapper around localStorage with convenience functions. */
   ns.Storage = function () { 
     this.storage = localStorage;
   };
@@ -34,22 +35,38 @@ var EgoMonitor = (function () {
     }
   };
 
+  // Only one instance since it's pointing to localStorage.
   ns.cache = new ns.Storage();
 
-  ns.templates = {
-    score: '<li style="list-style-image: url({{iconURL}})">{{label}} {{score}}</li>'
+  ns.EgoMonitor = function (config) {
+    this.instantiate(config);
   };
 
-  ns.refresh = function (instances) {
-    var total = 0;
+  ns.EgoMonitor.prototype = {
+    constructor: ns.EgoMonitor,
+    instantiate: function (config) {
+      var that = this;
 
-    instances.forEach(function (i) {
-      i.load(function (data) {
-        total += data.score;
-        $('#monitors').append(Mustache.to_html(EgoMonitor.templates.score, data));
-        $('#total').html(total);
+      that.instances = config.map(function (c) {
+        return new ns[c.connector](c.options);
       });
-    });
+    },
+
+    templates: {
+      score: '<li style="list-style-image: url({{iconURL}})">{{label}} {{score}}</li>'
+    },
+    refresh: function () {
+      var that = this,
+          total = 0;
+
+      that.instances.forEach(function (i) {
+        i.load(function (data) {
+          total += data.score;
+          $('#monitors').append(Mustache.to_html(that.templates.score, data));
+          $('#total').html(total);
+        });
+      });
+    }
   };
 
   ns.EgoSource = function () {};
@@ -170,11 +187,8 @@ var config = [
 ];
 
 $(document).ready(function () {
-  var instances = config.map(function (c) {
-    return new EgoMonitor[c.connector](c.options);
-  });
-
-  EgoMonitor.refresh(instances);
+  var em = new EgoMonitor.EgoMonitor(config);
+  em.refresh();
 });
 </script>
 </html>
