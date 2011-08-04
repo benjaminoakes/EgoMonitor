@@ -72,6 +72,9 @@ var EgoMonitor = (function () {
   ns.EgoSource = function () {};
   ns.EgoSource.prototype = {
     constructor: ns.EgoSource,
+    key: function () {
+      return JSON.stringify(this);
+    },
     load: function (callback) {
       var that = this,
           cached = ns.cache.get(that.key()),
@@ -83,7 +86,7 @@ var EgoMonitor = (function () {
       if (cached) {
         wrappedCallback(JSON.parse(cached));
       } else {
-        jQuery.getJSON(that.jsonpURL, wrappedCallback);
+        jQuery.getJSON(that.jsonpURL(), wrappedCallback);
       }
     }
   };
@@ -119,9 +122,6 @@ var EgoMonitor = (function () {
         score: rawData.users[0].reputation,
       };
     },
-    key: function () {
-      return JSON.stringify(this);
-    },
   });
 
   ns.Twitter = function (options) {
@@ -142,19 +142,20 @@ var EgoMonitor = (function () {
         score: rawData.length,
       };
     },
-    key: function () {
-      return JSON.stringify(this);
-    },
   });
 
-  ns.RubyGems = function (options) {
-    this.gemName = options.gemName;
-  };
+  // ns.RubyGems = function (options) {
+  //   this.gemName = options.gemName;
+  // };
 
-  ns.RubyGems.prototype = _.extend(new ns.EgoSource(), {
-    constructor: ns.RubyGems,
-    API_URL: 'http://rubygems.org/api/v1/versions/%gemName.json',
-  });
+  // ns.RubyGems.prototype = _.extend(new ns.EgoSource(), {
+  //   constructor: ns.RubyGems,
+  //   API_URL: 'http://rubygems.org/api/v1/versions/%gemName.json',
+  //   ICON_URL: 'http://rubygems.org/favicon.ico',
+  //   jsonpURL: function () {
+  //     // TODO
+  //   }
+  // });
 
   ns.GitHub = function (options) {
     this.userName = options.userName;
@@ -164,6 +165,18 @@ var EgoMonitor = (function () {
   ns.GitHub.prototype = _.extend(new ns.EgoSource(), {
     constructor: ns.GitHub,
     API_URL: 'http://github.com/api/v2/json/repos/show/%userName/%repoName',
+    ICON_URL: 'http://github.com/favicon.ico',
+    jsonpURL: function () {
+      return [this.API_URL.replace('%userName', this.userName).replace('%repoName', this.repoName), 'callback=?'].join('?');
+    },
+    transform: function (rawData) {
+      var repo = rawData.repository;
+      return {
+        iconURL: this.ICON_URL,
+        label: [this.userName, this.repoName].join('/'),
+        score: repo.watchers + repo.forks,
+      };
+    }
   });
 
   return ns;
@@ -171,6 +184,8 @@ var EgoMonitor = (function () {
 
 // TODO get rid of global
 var config = [
+  {connector: 'GitHub', options: {userName: 'benjaminoakes', repoName: 'maid'}},
+  {connector: 'GitHub', options: {userName: 'benjaminoakes', repoName: 'tabcarousel'}},
   {connector: 'StackExchange', options: {domain: 'stackoverflow.com', userID: 146764}},
   {connector: 'StackExchange', options: {domain: 'superuser.com', userID: 13827}},
   {connector: 'StackExchange', options: {domain: 'unix.stackexchange.com', userID: 569}},
@@ -181,9 +196,6 @@ var config = [
   // {connector: 'RubyGems', options {gemName: 'maid'}},
   // {connector: 'RubyGems', options {gemName: 'snow'}},
   // {connector: 'RubyGems', options {gemName: 'mailroom'}},
-  // {connector: 'GitHub', options: {userName: 'benjaminoakes', repoName: 'maid'},
-  // {connector: 'GitHub', options: {userName: 'benjaminoakes', repoName: 'tabcarousel'},
-  // TODO // {connector: 'GitHub.com/api/v2/json/user/show/benjaminoakes
 ];
 
 $(document).ready(function () {
