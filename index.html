@@ -179,6 +179,47 @@ var EgoMonitor = (function () {
     }
   });
 
+  ns.Piwik = function (options) {
+    this.host = options.host;
+    this.idSite = options.idSite;
+    this.beginYear = options.beginYear;
+    this.endYear = (new Date()).getFullYear();
+    this.tokenAuth = options.tokenAuth;
+  };
+
+  ns.Piwik.prototype = _.extend(new ns.EgoSource(), {
+    constructor: ns.Piwik,
+    ICON_URL: 'http://%host/plugins/CoreHome/templates/images/favicon.ico',
+    API_URL: 'http://%host/index.php?module=API&method=VisitsSummary.get&format=JSON&idSite=%idSite&period=year&date=%beginYear-01-01,%endYear-12-31&token_auth=%tokenAuth',
+    jsonpURL: function () {
+      var s = [
+        this.API_URL
+          .replace('%host', this.host)
+          .replace('%idSite', this.idSite)
+          .replace('%beginYear', this.beginYear)
+          .replace('%endYear', this.endYear)
+          .replace('%tokenAuth', this.tokenAuth),
+        'jsoncallback=?'
+      ].join('&');
+      console.log(s);
+      return s;
+    },
+    /** NOTE Some versions of Piwik have a bad sanitizing regexp that only allow /[a-zA-Z0-9]/ rather than /[a-zA-Z0-9_]/ (notice the underscore), which makes jQuery choke on JSONP requests.  Upgrade to 1.5.1 or above (or fix core/DataTable/Renderer/Json.php). */
+    transform: function (rawData) {
+      var i, max, score = 0;
+
+      for (i = this.beginYear, max = this.endYear; i <= max; i++) {
+        score += rawData[String(i)].nb_visits;
+      }
+
+      return {
+        iconURL: this.ICON_URL.replace('%host', this.host),
+        label: this.host,
+        score: score,
+      };
+    },
+  });
+
   return ns;
 }());
 
