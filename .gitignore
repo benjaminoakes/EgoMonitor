@@ -1,4 +1,4 @@
 tmp/
 *.sw[nop]
 node_modules
-config.js
+vendor/config.js
