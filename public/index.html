@@ -20,14 +20,14 @@
 <script src="/lib/config.js"></script>
 <script>
 $(document).ready(function () {
-  var em = new EgoMonitor.EgoMonitor(config);
-  em.refresh();
-
-  $('#refresh').click(function () {
-    EgoMonitor.cache.clear();
-    $('#monitors').html('');
+    var em = new EgoMonitor.EgoMonitor(config);
     em.refresh();
-  });
+
+    $('#refresh').click(function () {
+        EgoMonitor.cache.clear();
+        $('#monitors').html('');
+        em.refresh();
+    });
 });
 </script>
 
