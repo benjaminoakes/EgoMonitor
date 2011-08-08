@@ -9,6 +9,7 @@
 
 <body>
 <h2>Total: <span id="total"></span></h2>
+<button id="refresh">Refresh</button>
 <ul id="monitors"></ul>
 </body>
 
@@ -21,6 +22,12 @@
 $(document).ready(function () {
   var em = new EgoMonitor.EgoMonitor(config);
   em.refresh();
+
+  $('#refresh').click(function () {
+    EgoMonitor.cache.clear();
+    $('#monitors').html('');
+    em.refresh();
+  });
 });
 </script>
 
