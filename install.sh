@@ -13,5 +13,5 @@
 # make
 # make install
 # curl http://npmjs.org/install.sh | sh
-# bundle install
+# bundle install # need heroku and foreman
 # npm install
