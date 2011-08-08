@@ -2,6 +2,7 @@ var express = require('express'),
     app = express.createServer(express.logger());
 
 app.use('/', express.static(__dirname + '/public/'));
+app.use('/lib/', express.static(__dirname + '/lib/'));
 app.use('/vendor/', express.static(__dirname + '/vendor/'));
 
 (function (port) {
