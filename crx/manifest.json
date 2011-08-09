@@ -1,0 +1,16 @@
+{
+  "name": "EgoMonitor",
+  "version": "0.0.1",
+
+  "description": "Keep track of 'scores' on sites you visit frequently, without having to check multiple pages, log in and out, etc.",
+  "homepage_url": "https://github.com/benjaminoakes/EgoMonitor",
+
+  "icons": {
+    "32": "icon.png"
+  },
+
+  "browser_action": {
+    "default_icon": "icon.png",
+    "popup": "popup.html"
+  }
+}
