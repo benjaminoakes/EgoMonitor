@@ -8,12 +8,16 @@ app.use('/lib/', express.static(__dirname + '/lib/'));
 app.use('/vendor/', express.static(__dirname + '/vendor/'));
 
 app.get('/rubygems.json', function (request, response) {
-    var buffer = [];
+    var buffer = [],
+        options = {
+            host: 'rubygems.org',
+            path: ['/api/v1/versions/', request.query.gemName, '.json'].join('')
+        };
 
     // TODO this doesn't give back an object that's compatible with http.get... why?
     // var opts = url.parse('http://rubygems.org/api/v1/versions/maid.json');
 
-    http.get({host: 'rubygems.org', path: '/api/v1/versions/maid.json'}, function (apiResponse) {
+    http.get(options, function (apiResponse) {
         apiResponse.on('data', function (chunk) {
             buffer.push(chunk);
         }).on('end', function () {
