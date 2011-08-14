@@ -32,6 +32,7 @@ _gaq.push(['_trackPageview']);
 <script src="/vendor/mustache.js"></script>
 <script src="/vendor/underscore.js"></script>
 <script src="/lib/EgoMonitor.js"></script>
+<script src="/lib/sources.js"></script>
 <script src="/lib/config.js"></script>
 <script>
 $(document).ready(function () {
@@ -39,7 +40,6 @@ $(document).ready(function () {
     em.refresh();
 
     $('#refresh').click(function () {
-        EgoMonitor.cache.clear();
         $('#monitors').html('');
         em.refresh();
     });
