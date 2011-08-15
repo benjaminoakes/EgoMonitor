@@ -8,8 +8,7 @@ app.use('/lib/', express.static(__dirname + '/lib/'));
 app.use('/vendor/', express.static(__dirname + '/vendor/'));
 
 app.get('/rubygems.json', function (request, response) {
-    var buffer = [],
-        options = {
+    var options = {
             host: 'rubygems.org',
             path: ['/api/v1/versions/', request.query.gemName, '.json'].join('')
         };
@@ -19,12 +18,10 @@ app.get('/rubygems.json', function (request, response) {
 
     http.get(options, function (apiResponse) {
         apiResponse.on('data', function (chunk) {
-            buffer.push(chunk);
+            response.write(chunk);
         }).on('end', function () {
-            response.send(buffer.join(''));
+            response.end();
         });
-    }).on('error', function (e) {
-        throw e;
     });
 });
 
