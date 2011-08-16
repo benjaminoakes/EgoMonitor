@@ -25,6 +25,28 @@ app.get('/rubygems.json', function (request, response) {
     });
 });
 
+// app.get('/db.json', function (request, response) {
+//     var view = request.query.v || view;
+//         options = {
+//           host: '127.0.0.1',
+//           port: 5984,
+//           path: view,
+//         };
+// 
+//     http.get(options, function (dbResponse) {
+//         dbResponse.on('data', function (chunk) {
+//             response.write(chunk);
+//         }).on('end', function () {
+//             response.end();
+//         });
+//     }).on('error', function (e) {
+//         response.send({
+//             status: 'invalid',
+//             view: view,
+//         });
+//     });
+// });
+
 (function (port) {
     app.listen(port, function () {
         console.log("Listening on " + port);
