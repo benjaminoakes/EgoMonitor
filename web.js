@@ -1,7 +1,6 @@
 var express = require('express'),
     http    = require('http'),
-    https   = require('https'),
-    jsdom   = require('jsdom');
+    https   = require('https');
 
 var app = express.createServer(express.logger());
 
