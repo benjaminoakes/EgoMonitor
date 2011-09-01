@@ -26,8 +26,8 @@ Required:
 
   * A Unix-like OS (such as Mac OS X, Linux, etc) for build scripts and setup scripts
   * Ruby 1.8.7 or 1.9.2 (for command line apps) <http://ruby-lang.org/>
-  * Node.js v0.4.7 <http://nodejs.org/dist/node-v0.4.7.tar.gz>
-  * NPM <http://npmjs.org/>
+  * (Installed by setup.sh) Node.js v0.4.7 <http://nodejs.org/dist/node-v0.4.7.tar.gz>
+  * (Installed by setup.sh) NPM <http://npmjs.org/>
 
 To build the Chrome Extension:
 
