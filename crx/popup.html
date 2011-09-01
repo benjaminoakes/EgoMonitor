@@ -3,6 +3,15 @@
 <head>
 <title>EgoMonitor</title>
 </head>
+<script>
+(function (root) {
+    var n = 4814,
+        backgroundColor = [121, 183, 61, 255];
+
+    chrome.browserAction.setBadgeText({text: String(n)});
+    chrome.browserAction.setBadgeBackgroundColor({color: backgroundColor});
+}(this));
+</script>
 <body>
 <iframe src="http://egomonitor.herokuapp.com/" height="550" width="350" border="0" frameBorder="0" scrolling="auto" style="margin: 0; padding:0; border: 0;"></iframe>
 </body>
