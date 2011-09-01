@@ -12,4 +12,4 @@ Required:
   * Node.js v0.4.7 <http://nodejs.org/dist/node-v0.4.7.tar.gz>
   * NPM <http://npmjs.org/>
 
-See install.sh
+See setup.sh
