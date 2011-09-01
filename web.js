@@ -1,4 +1,5 @@
 var express = require('express'),
+    fs      = require('fs'),
     http    = require('http'),
     https   = require('https'),
     jsdom   = require('jsdom');
@@ -8,6 +9,49 @@ var app = express.createServer(express.logger());
 app.use('/', express.static(__dirname + '/public/'));
 app.use('/lib/', express.static(__dirname + '/lib/'));
 app.use('/vendor/', express.static(__dirname + '/vendor/'));
+
+var git = {
+    head: function (branch, callback) {
+        fs.readFile(['.git/refs/heads/', branch].join(''), function (err, data) {
+            if (err) throw err;
+            callback(String(data));
+        });
+    }
+};
+
+app.get('/cache.manifest', function (req, res) {
+    var body = ['CACHE MANIFEST'];
+
+    // res.contentType('text/cache-manifest'); // FIXME
+    res.setHeader('Content-Type', 'text/cache-manifest');
+
+    // Idea:
+    // var manifest = {
+    //     sections: {
+    //         CACHE:   ['index.html']
+    //         NETWORK: ['*']
+    //     }
+    // };
+
+    git.head('master', function (sha) {
+        body.push(['#', sha].join(' ')); 
+
+        if ('production' !== process.env.NODE_ENV) {
+            // NOTE timing dependency (requests must be within a second) -- probably okay for development
+            body.push(['#', (new Date()).toString()].join(' ')); 
+        }
+
+        body.push('CACHE:'); 
+        body.push('index.html');
+
+        body.push('NETWORK:');
+        body.push('*');
+
+        res.write(body.join('\n'));
+
+        res.end();
+    });
+});
 
 app.get('/rubygems.json', function (request, response) {
     var options = {
